@@ -1,63 +1,135 @@
-# MSGN Messenger V1
+# MSGN // NECRO — Messenger 1.1
 
-Terminal-based chat client for Termux/Android (including ARM 32-bit) with a Cloudflare Workers + D1 backend.
+پیام‌رسان متنی سبک برای اجرا در ترمینال اندروید (Termux)، با بک‌اند Cloudflare Workers و پایگاه داده D1.
 
-## Features
-- Account registration/login (PBKDF2 password hashing; signed expiring token)
-- Public room, groups, direct messages
-- Terminal UI and periodic message refresh while typing
-- Python standard library only; no pip dependencies
-- API-side membership checks
+> این پروژه در حال توسعه است. پیش از استفاده عملیاتی، محدودیت‌های امنیتی و فنی این نسخه را بخوانید.
 
-## Important limitations
-- V1 refreshes messages by HTTP polling (roughly every 1.2 seconds while typing), not WebSocket. This is near-real-time, not a persistent socket.
-- Transport is HTTPS. Messages are not end-to-end encrypted; server/database operators can read them.
-- This is a starter release. Before public production use add rate limits, abuse reporting/moderation, email/phone recovery, account deletion, privacy policy, backups and stronger operational monitoring.
-- GitHub hosts source/install files; it is NOT the chat server or user database.
+## امکانات
 
-## Deploy backend
-1. Cloudflare Dashboard → Workers & Pages → Create Worker.
-2. Paste `worker/src/index.js` into the Worker editor and Deploy.
-3. Workers & Pages → Storage & databases → D1 → Create database, e.g. `msgn-messenger-db`.
-4. D1 Console: run all SQL in `worker/schema.sql`.
-5. Worker → Settings → Bindings → Add D1 database binding:
-   - Variable name: `DB`
-   - Database: `msgn-messenger-db`
-6. Worker → Settings → Variables and Secrets → add secret `TOKEN_SECRET`, value a random secret at least 32 bytes (do not commit it).
-7. Deploy again and test `https://YOUR-WORKER.workers.dev/health`.
+- ثبت‌نام و ورود با نام کاربری و گذرواژه
+- اتاق گفت‌وگوی عمومی
+- دریافت پیام‌های جدید با Polling
+- رابط ترمینالی فارسی
+- نمایش تاریخ شمسی و ساعت ایران
+- رنگ ثابت برای نام کاربران
+- ذخیره توکن و نام کاربری در مسیر خانگی کاربر
+- پشتیبانی از اجرای کلاینت در Termux
 
-## Install client
-On Termux:
+## نصب در Termux
+
+ابتدا Git و Python را نصب کنید:
+
 ```bash
 pkg update -y
-pkg install python git -y
-git clone https://github.com/YOUR-GITHUB/MSGN-Messenger.git
-cd MSGN-Messenger
+pkg install -y git python
+مخزن را دریافت کنید:
+git clone https://github.com/mohamad-rvnnt/MSGN-Messenger-V1.git
+وارد پوشه پروژه شوید:
+cd MSGN-Messenger-V1
+اسکریپت نصب را اجرا کنید:
 bash install.sh
-export MSGN_API="https://YOUR-WORKER.workers.dev"
+پس از نصب، تنظیمات محیط را بارگذاری کنید:
 source ~/.bashrc
+اکنون پیام‌رسان را اجرا کنید:
 msgn
-```
-Set MSGN_API permanently by adding this line to `~/.bashrc`:
-```bash
+اسکریپت نصب، کلاینت را در مسیر زیر قرار می‌دهد:
+~/.local/bin/msgn
+قوانین ثبت‌نام
+ثبت‌نام کاربران با قوانین اعتبارسنجی سمت سرور انجام می‌شود.
+نام کاربری (Username)
+فقط حروف کوچک انگلیسی از a تا z
+حداقل ۵ و حداکثر ۲۰ کاراکتر
+استفاده از اعداد و علائم مجاز نیست.
+نام کاربری تکراری قابل ثبت نیست.
+الگوی اعتبارسنجی:
+^[a-z]{5,20}$
+گذرواژه (Password)
+دقیقاً ۸ کاراکتر
+فقط حروف انگلیسی و اعداد
+حداقل یک حرف کوچک انگلیسی
+حداقل یک حرف بزرگ انگلیسی
+حداقل یک عدد
+الگوی اعتبارسنجی:
+^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[A-Za-z0-9]{8}$
+نمونه گذرواژه معتبر:
+Msgn2026
+اتصال به سرور
+کلاینت به‌صورت پیش‌فرض از سرور عمومی پروژه استفاده می‌کند.
+در صورت تمایل به استفاده از سرور اختصاصی، متغیر محیطی زیر را تنظیم کنید:
 export MSGN_API="https://YOUR-WORKER.workers.dev"
-```
-
-## Menu
-1 register; 2 login; 3 public chat; 4 rooms; 5 create group; 6 join group by ID; 7 DM by username; 8 logout.
-
-## GitHub publish
-Create a repository named `MSGN-Messenger`, then:
-```bash
-git init
-git add .
-git commit -m "MSGN Messenger V1"
-git branch -M main
-git remote add origin https://github.com/YOUR-GITHUB/MSGN-Messenger.git
-git push -u origin main
-```
-
-## Security
-- Never put `TOKEN_SECRET` in GitHub, Termux client, screenshots, or chat.
-- Use a unique strong password. This V1 does not include password reset.
-- Do not use this V1 for highly sensitive communications.
+سپس برنامه را اجرا کنید:
+msgn
+برای دائمی‌کردن تنظیمات، خط export را به فایل ~/.bashrc اضافه کنید.
+راه‌اندازی سرور اختصاصی
+بک‌اند پروژه بر پایه فناوری‌های زیر ساخته شده است:
+Cloudflare Workers
+Cloudflare D1
+JavaScript
+REST API
+برای راه‌اندازی سرور اختصاصی:
+یک Cloudflare Worker ایجاد کنید.
+کد موجود در worker/src/worker.js را روی Worker مستقر کنید.
+یک پایگاه داده D1 بسازید.
+پایگاه داده را با نام Binding زیر به Worker متصل کنید:
+DB
+فایل worker/schema.sql را روی پایگاه داده اجرا کنید.
+یک Secret با نام زیر در تنظیمات Worker تعریف کنید:
+TOKEN_SECRET
+آدرس Worker اختصاصی خود را در متغیر MSGN_API کلاینت قرار دهید.
+نکته امنیتی: مقدار TOKEN_SECRET باید تصادفی، طولانی و محرمانه باشد. هرگز آن را در مخزن عمومی GitHub منتشر نکنید.
+ساختار پروژه
+MSGN-Messenger-V1/
+│
+├── client/
+│   └── msgn.py
+│
+├── worker/
+│   ├── schema.sql
+│   └── src/
+│       └── worker.js
+│
+├── deploy.py
+├── install.sh
+├── .gitignore
+└── README.md
+وضعیت امکانات
+قابلیت
+وضعیت
+ثبت‌نام کاربران
+فعال
+ورود کاربران
+فعال
+اتاق گفت‌وگوی عمومی
+فعال
+ارسال پیام
+فعال
+دریافت پیام‌ها
+فعال
+تاریخ شمسی
+فعال
+رابط فارسی
+فعال
+پیام خصوصی
+غیرفعال
+گروه‌های اختصاصی
+غیرفعال
+WebSocket
+پشتیبانی نمی‌شود
+نکات فنی و امنیتی
+ارتباط کلاینت و سرور از طریق API انجام می‌شود.
+دریافت پیام‌ها با Polling دوره‌ای انجام می‌شود، نه WebSocket.
+پیام‌ها در این نسخه رمزنگاری سرتاسری (E2EE) ندارند.
+مدیر زیرساخت سرور از نظر فنی می‌تواند به پیام‌های ذخیره‌شده دسترسی داشته باشد.
+از گذرواژه‌ای که در سرویس‌های دیگر استفاده می‌کنید، در این پیام‌رسان استفاده نکنید.
+توکن ورود و اطلاعات محرمانه سرور را در اختیار دیگران قرار ندهید.
+این نسخه را بدون بررسی امنیتی مستقل، برای تبادل اطلاعات حساس استفاده نکنید.
+نسخه پروژه
+MSGN // NECRO
+MESSENGER 1.1
+مخزن رسمی
+GitHub:
+https://github.com/mohamad-rvnnt/MSGN-Messenger-V1⁠�
+دریافت مستقیم پروژه:
+git clone https://github.com/mohamad-rvnnt/MSGN-Messenger-V1.git
+MSGN // NECRO
+RevenanT never fades. It always returns.
